@@ -129,4 +129,29 @@ class Penyewaan extends Model
     {
         return $this->getTotalPaid() >= $this->harga;
     }
+
+    /**
+     * Get total days calculated from dates
+     */
+    public function getTotalHariAttribute(): int
+    {
+        return $this->getDurationInDays();
+    }
+
+    /**
+     * Get price per day (calculated from total price / total days)
+     */
+    public function getHargaPerHariAttribute(): int
+    {
+        $totalDays = $this->getDurationInDays();
+        return $totalDays > 0 ? intval($this->harga / $totalDays) : 0;
+    }
+
+    /**
+     * Get total price (alias for harga field)
+     */
+    public function getTotalHargaAttribute(): int
+    {
+        return $this->harga;
+    }
 }

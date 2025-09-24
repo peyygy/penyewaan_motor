@@ -18,9 +18,45 @@ class MotorController extends Controller
     /**
      * Display a listing of the owner's motors.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $motors = Motor::where('pemilik_id', Auth::id())->with('tarif')->latest()->paginate(10);
+        $query = Motor::where('pemilik_id', Auth::id())
+            ->with(['tarif', 'penyewaans' => function($q) {
+                $q->where('status', 'completed')->with('bagiHasil');
+            }])
+            ->withCount(['penyewaans as total_bookings'])
+            ->withCount(['penyewaans as completed_bookings' => function($q) {
+                $q->where('status', 'completed');
+            }]);
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('merk', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhere('no_plat', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by type
+        if ($request->filled('tipe_cc')) {
+            $query->where('tipe_cc', $request->tipe_cc);
+        }
+
+        $motors = $query->latest()->paginate(12);
+        
+        // Calculate total revenue for each motor
+        $motors->getCollection()->each(function($motor) {
+            $motor->total_revenue = $motor->penyewaans->sum(function($penyewaan) {
+                return $penyewaan->bagiHasil ? $penyewaan->bagiHasil->bagi_hasil_pemilik : 0;
+            });
+        });
 
         return view('owner.motors.index', compact('motors'));
     }

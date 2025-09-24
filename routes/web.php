@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\MotorVerificationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\TarifController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\PenyewaanController as AdminPenyewaanController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboard;
 use App\Http\Controllers\Owner\MotorController;
 use App\Http\Controllers\Admin\MotorController as AdminMotorController;
@@ -63,6 +64,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     // Rental rates management
     Route::resource('tarif', TarifController::class);
+    
+    // Penyewaan management
+    Route::resource('penyewaans', AdminPenyewaanController::class);
+    Route::patch('/penyewaans/{penyewaan}/confirm', [AdminPenyewaanController::class, 'confirm'])->name('penyewaans.confirm');
+    Route::patch('/penyewaans/{penyewaan}/activate', [AdminPenyewaanController::class, 'activate'])->name('penyewaans.activate');
+    Route::patch('/penyewaans/{penyewaan}/complete', [AdminPenyewaanController::class, 'complete'])->name('penyewaans.complete');
     
     // Reports and analytics
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

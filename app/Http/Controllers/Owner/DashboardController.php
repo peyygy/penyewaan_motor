@@ -27,7 +27,7 @@ class DashboardController extends Controller
         $endOfMonth = $currentMonth->copy()->endOfMonth();
 
         // Owner's motor statistics
-        $motorStats = [
+        $stats = [
             'total_motors' => Motor::where('pemilik_id', $user->id)->count(),
             'pending_motors' => Motor::where('pemilik_id', $user->id)->where('status', MotorStatus::PENDING)->count(),
             'verified_motors' => Motor::where('pemilik_id', $user->id)->where('status', MotorStatus::VERIFIED)->count(),
@@ -95,15 +95,13 @@ class DashboardController extends Controller
         }
 
         return view('owner.dashboard', compact(
-            'motorStats',
+            'stats',
             'bookingStats',
             'revenueStats',
             'recentBookings',
             'recentMotors',
             'earningsChartData',
             'currentMonth'
-        ))->with([
-            'stats' => $motorStats // Add stats for backward compatibility
-        ]);
+        ));
     }
 }

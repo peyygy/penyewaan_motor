@@ -54,7 +54,13 @@
                     </a>
                 </div>
                 <div class="px-6 py-3">
-                    <a href="#" class="flex items-center text-blue-200 hover:bg-blue-700 hover:text-white px-4 py-2 rounded">
+                    <a href="{{ route('admin.penyewaans.index') }}" class="flex items-center {{ request()->routeIs('admin.penyewaans.*') ? 'text-white bg-blue-700' : 'text-blue-200 hover:bg-blue-700 hover:text-white' }} px-4 py-2 rounded">
+                        <span>📋</span>
+                        <span class="ml-3">Kelola Penyewaan</span>
+                    </a>
+                </div>
+                <div class="px-6 py-3">
+                    <a href="{{ route('admin.tarif.index') }}" class="flex items-center {{ request()->routeIs('admin.tarif.*') ? 'text-white bg-blue-700' : 'text-blue-200 hover:bg-blue-700 hover:text-white' }} px-4 py-2 rounded">
                         <span>💰</span>
                         <span class="ml-3">Tarif Rental</span>
                     </a>

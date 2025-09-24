@@ -22,7 +22,7 @@ class MotorController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Motor::with(['owner']);
+        $query = Motor::with(['owner', 'tarif']);
 
         // Search functionality
         if ($request->filled('search')) {
