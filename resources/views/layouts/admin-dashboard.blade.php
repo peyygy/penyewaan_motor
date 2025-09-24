@@ -36,13 +36,19 @@
                     </a>
                 </div>
                 <div class="px-6 py-3">
-                    <a href="#" class="flex items-center text-blue-200 hover:bg-blue-700 hover:text-white px-4 py-2 rounded">
+                    <a href="{{ route('admin.motors-verification.index') }}" class="flex items-center {{ request()->routeIs('admin.motors-verification*') ? 'text-white bg-blue-700' : 'text-blue-200 hover:bg-blue-700 hover:text-white' }} px-4 py-2 rounded">
                         <span>🏍️</span>
                         <span class="ml-3">Verifikasi Motor</span>
                     </a>
                 </div>
                 <div class="px-6 py-3">
-                    <a href="#" class="flex items-center text-blue-200 hover:bg-blue-700 hover:text-white px-4 py-2 rounded">
+                    <a href="{{ route('admin.motors.index') }}" class="flex items-center {{ request()->routeIs('admin.motors.*') && !request()->routeIs('admin.motors-verification*') ? 'text-white bg-blue-700' : 'text-blue-200 hover:bg-blue-700 hover:text-white' }} px-4 py-2 rounded">
+                        <span>🏍️</span>
+                        <span class="ml-3">Kelola Motor</span>
+                    </a>
+                </div>
+                <div class="px-6 py-3">
+                    <a href="{{ route('admin.users.index') }}" class="flex items-center {{ request()->routeIs('admin.users.*') ? 'text-white bg-blue-700' : 'text-blue-200 hover:bg-blue-700 hover:text-white' }} px-4 py-2 rounded">
                         <span>👥</span>
                         <span class="ml-3">Kelola User</span>
                     </a>
@@ -60,16 +66,6 @@
                     </a>
                 </div>
             </nav>
-
-            <div class="absolute bottom-4 left-4 right-4">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full text-left text-blue-200 hover:bg-blue-700 hover:text-white px-4 py-2 rounded">
-                        <span>🚪</span>
-                        <span class="ml-3">Logout</span>
-                    </button>
-                </form>
-            </div>
         </div>
 
         <!-- Main Content -->
@@ -80,9 +76,26 @@
                     <div class="flex items-center justify-between">
                         <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
                         <div class="flex items-center space-x-4">
-                            <span class="text-sm text-gray-600">{{ auth()->user()->nama }}</span>
-                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                {{ substr(auth()->user()->nama, 0, 1) }}
+                            <div class="relative">
+                                <button id="userMenuButton" class="flex items-center space-x-2 text-gray-600 hover:text-gray-900 focus:outline-none">
+                                    <span class="text-sm">{{ auth()->user()->nama }}</span>
+                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                        {{ substr(auth()->user()->nama, 0, 1) }}
+                                    </div>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                
+                                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                    <form method="POST" action="{{ route('logout') }}" class="block">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            Logout
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -95,5 +108,22 @@
             </main>
         </div>
     </div>
+
+    <script>
+        // Toggle user menu dropdown
+        document.getElementById('userMenuButton').addEventListener('click', function() {
+            document.getElementById('userMenu').classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const userMenuButton = document.getElementById('userMenuButton');
+            
+            if (!userMenuButton.contains(event.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -75,9 +75,9 @@
 
     <div class="text-center text-sm text-gray-600 mt-6">
         <p class="font-medium">Demo Credentials:</p>
-        <p class="mt-1">Admin: admin@rentmotorcycle.com / admin123</p>
-        <p>Owner: owner1@example.com / password123</p>
-        <p>Renter: renter1@example.com / password123</p>
+        <p class="mt-1">Admin: admin@sewa.com / 123456</p>
+        <p>Pemilik: pemilik1@sewa.com / 123456</p>
+        <p>Penyewa: penyewa1@sewa.com / 123456</p>
     </div>
 </div>
 @endsection

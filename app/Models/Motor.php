@@ -17,6 +17,13 @@ class Motor extends Model
     protected $fillable = [
         'pemilik_id',
         'merk',
+        'model',
+        'tahun',
+        'plat_nomor',
+        'tipe',
+        'cc_mesin',
+        'warna',
+        'deskripsi',
         'tipe_cc',
         'no_plat',
         'status',
@@ -44,6 +51,14 @@ class Motor extends Model
      * Get the rental rates for this motor
      */
     public function tarifRental(): HasOne
+    {
+        return $this->hasOne(TarifRental::class);
+    }
+
+    /**
+     * Alias for tarifRental relation
+     */
+    public function tarif(): HasOne
     {
         return $this->hasOne(TarifRental::class);
     }

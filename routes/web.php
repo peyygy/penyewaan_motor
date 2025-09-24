@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\TarifController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboard;
 use App\Http\Controllers\Owner\MotorController;
+use App\Http\Controllers\Admin\MotorController as AdminMotorController;
 use App\Http\Controllers\Owner\RevenueController;
 use App\Http\Controllers\Renter\DashboardController as RenterDashboard;
 use App\Http\Controllers\Renter\MotorSearchController;
@@ -45,11 +46,17 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     
-    // Motor verification
-    Route::get('/motors', [MotorVerificationController::class, 'index'])->name('motors.index');
-    Route::get('/motors/{motor}', [MotorVerificationController::class, 'show'])->name('motors.show');
-    Route::patch('/motors/{motor}/verify', [MotorVerificationController::class, 'verify'])->name('motors.verify');
-    Route::patch('/motors/{motor}/reject', [MotorVerificationController::class, 'reject'])->name('motors.reject');
+    // Motor verification and management
+    Route::get('/motors-verification', [MotorVerificationController::class, 'index'])->name('motors-verification.index');
+    Route::get('/motors-verification/{motor}', [MotorVerificationController::class, 'show'])->name('motors-verification.show');
+    Route::patch('/motors-verification/{motor}/verify', [MotorVerificationController::class, 'verify'])->name('motors-verification.verify');
+    Route::patch('/motors-verification/{motor}/activate', [MotorVerificationController::class, 'activate'])->name('motors-verification.activate');
+    Route::patch('/motors-verification/{motor}/reject', [MotorVerificationController::class, 'reject'])->name('motors-verification.reject');
+    
+    // Full motor CRUD
+    Route::resource('motors', AdminMotorController::class);
+    Route::patch('/motors/{motor}/suspend', [AdminMotorController::class, 'suspend'])->name('motors.suspend');
+    Route::patch('/motors/{motor}/reactivate', [AdminMotorController::class, 'reactivate'])->name('motors.reactivate');
     
     // User management
     Route::resource('users', UserController::class)->only(['index', 'show', 'destroy']);

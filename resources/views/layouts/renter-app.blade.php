@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -45,9 +46,9 @@
                             📅 Booking Saya
                         </a>
                         
-                        <a href="{{ route('renter.history.index') }}" 
-                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('renter.history.*') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                            📋 Riwayat
+                        <a href="{{ route('renter.payments.index') }}" 
+                           class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {{ request()->routeIs('renter.payments.*') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            📋 Pembayaran
                         </a>
                     </div>
                 </div>
@@ -79,7 +80,7 @@
                                 <div class="text-gray-500">{{ auth()->user()->email }}</div>
                             </div>
                             
-                            <a href="{{ route('renter.profile.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                 👤 Profil Saya
                             </a>
                             
@@ -123,9 +124,9 @@
                     📅 Booking Saya
                 </a>
                 
-                <a href="{{ route('renter.history.index') }}" 
-                   class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('renter.history.*') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300' }}">
-                    📋 Riwayat
+                <a href="{{ route('renter.payments.index') }}" 
+                   class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('renter.payments.*') ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300' }}">
+                    📋 Pembayaran
                 </a>
             </div>
             
@@ -142,7 +143,7 @@
                     </div>
                 </div>
                 <div class="mt-3 space-y-1">
-                    <a href="{{ route('renter.profile.index') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+                    <a href="#" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">
                         👤 Profil Saya
                     </a>
                     <form method="POST" action="{{ route('logout') }}">

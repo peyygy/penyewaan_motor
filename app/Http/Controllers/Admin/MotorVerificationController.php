@@ -16,7 +16,7 @@ class MotorVerificationController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Motor::with(['owner', 'tarif']);
+        $query = Motor::with(['owner']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -42,7 +42,7 @@ class MotorVerificationController extends Controller
 
         $motors = $query->paginate(10);
 
-        return view('admin.motors.index', compact('motors'));
+        return view('admin.motors-verification.index', compact('motors'));
     }
 
     /**
@@ -50,7 +50,7 @@ class MotorVerificationController extends Controller
      */
     public function show(Motor $motor): View
     {
-        $motor->load(['owner', 'tarif', 'penyewaans.penyewa']);
+        $motor->load(['owner', 'penyewaans.penyewa']);
         
         return view('admin.motors.show', compact('motor'));
     }
@@ -92,8 +92,8 @@ class MotorVerificationController extends Controller
             return redirect()->back()->with('error', 'Motor hanya dapat ditolak jika statusnya pending.');
         }
 
-        // You might want to add a reason field later
-        $motor->update(['status' => MotorStatus::PENDING]); // Keep as pending with rejection reason
+        // Change status to rejected
+        $motor->update(['status' => MotorStatus::REJECTED]);
         
         return redirect()->back()->with('success', 'Motor ditolak. Owner akan diberitahu untuk melengkapi dokumen.');
     }

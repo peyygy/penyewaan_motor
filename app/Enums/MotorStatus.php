@@ -9,6 +9,7 @@ enum MotorStatus: string
     case AVAILABLE = 'available';
     case RENTED = 'rented';
     case MAINTENANCE = 'maintenance';
+    case REJECTED = 'rejected';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum MotorStatus: string
             self::AVAILABLE => 'Tersedia',
             self::RENTED => 'Sedang Disewa',
             self::MAINTENANCE => 'Maintenance',
+            self::REJECTED => 'Ditolak',
         };
     }
 
@@ -29,6 +31,7 @@ enum MotorStatus: string
             self::AVAILABLE => 'green',
             self::RENTED => 'red',
             self::MAINTENANCE => 'gray',
+            self::REJECTED => 'red',
         };
     }
 }

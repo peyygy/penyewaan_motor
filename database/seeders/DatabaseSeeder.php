@@ -12,25 +12,27 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            AdminSeeder::class,
-            UserSeeder::class,
-            MotorSeeder::class,
-            BookingSeeder::class,
+            DummyDataSeeder::class,
         ]);
 
         $this->command->info('');
-        $this->command->info('🎉 Database seeded successfully!');
+        $this->command->info(' Database seeded success!');
         $this->command->info('');
         $this->command->info('👤 Login Credentials:');
-        $this->command->info('📧 Admin: admin@rentmotorcycle.com | 🔑 Password: admin123');
-        $this->command->info('📧 Owner: budi@owner.com | 🔑 Password: 123456');
-        $this->command->info('📧 Renter: john@renter.com | 🔑 Password: 123456');
+        $this->command->info('📧 Admin: admin@sewa.com | 🔑 Password: 123456');
+        $this->command->info('📧 Pemilik 1: pemilik1@sewa.com | 🔑 Password: 123456');
+        $this->command->info('📧 Pemilik 2: pemilik2@sewa.com | 🔑 Password: 123456');
+        $this->command->info('📧 Penyewa 1: penyewa1@sewa.com | 🔑 Password: 123456');
+        $this->command->info('📧 Penyewa 2: penyewa2@sewa.com | 🔑 Password: 123456');
+        $this->command->info('📧 Penyewa 3: penyewa3@sewa.com | 🔑 Password: 123456');
+        $this->command->info('📧 Penyewa 4: penyewa4@sewa.com | 🔑 Password: 123456');
+        $this->command->info('📧 Penyewa 5: penyewa5@sewa.com | 🔑 Password: 123456');
         $this->command->info('');
         $this->command->info('🏍️  Sample data includes:');
-        $this->command->info('   • 1 Admin, 3 Owners, 4 Renters');
-        $this->command->info('   • 8 Motors (6 available, 1 pending, 1 verified)');
-        $this->command->info('   • 6 Sample bookings for September 2025');
-        $this->command->info('   • Revenue sharing records');
+        $this->command->info('   • 1 Admin, 2 Pemilik, 5 Penyewa');
+        $this->command->info('   • 4 Motors (2 per pemilik)');
+        $this->command->info('   • 7 Completed rentals in September 2024');
+        $this->command->info('   • All payments successful with bagi hasil settled');
         $this->command->info('');
     }
 }

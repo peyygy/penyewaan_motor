@@ -102,6 +102,8 @@ class DashboardController extends Controller
             'recentMotors',
             'earningsChartData',
             'currentMonth'
-        ));
+        ))->with([
+            'stats' => $motorStats // Add stats for backward compatibility
+        ]);
     }
 }
