@@ -12,7 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            DummyDataSeeder::class,
+            // DummyDataSeeder::class, // Old static seeder
+            DynamicTestDataSeeder::class, // New dynamic seeder
         ]);
 
         $this->command->info('');

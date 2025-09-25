@@ -47,6 +47,14 @@ class Motor extends Model
     }
 
     /**
+     * Alias for owner relationship (for consistency)
+     */
+    public function pemilik(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pemilik_id');
+    }
+
+    /**
      * Get the rental rates for this motor
      */
     public function tarifRental(): HasOne

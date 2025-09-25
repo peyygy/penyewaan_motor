@@ -34,6 +34,10 @@ class DashboardController extends Controller
             'available_motors' => Motor::where('pemilik_id', $user->id)->where('status', MotorStatus::AVAILABLE)->count(),
             'rented_motors' => Motor::where('pemilik_id', $user->id)->where('status', MotorStatus::RENTED)->count(),
         ];
+        
+        // Calculate occupancy rate
+        $totalActiveMotors = $stats['available_motors'] + $stats['rented_motors'];
+        $occupancyRate = $totalActiveMotors > 0 ? round(($stats['rented_motors'] / $totalActiveMotors) * 100, 1) : 0;
 
         // Booking statistics for owner's motors
         $motorIds = Motor::where('pemilik_id', $user->id)->pluck('id');
@@ -94,6 +98,27 @@ class DashboardController extends Controller
             ];
         }
 
+        // Get all motors for the logged-in owner
+        $motors = Motor::where('pemilik_id', $user->id)
+            ->with('tarifRental')
+            ->withCount(['penyewaans as completed_rentals' => function($query) {
+                $query->where('status', BookingStatus::COMPLETED);
+            }])
+            ->get();
+
+        // Top performing motors (by completed rental count) - SQLite compatible
+        $topMotors = Motor::where('pemilik_id', $user->id)
+            ->with('tarifRental')
+            ->withCount(['penyewaans as completed_rentals' => function($query) {
+                $query->where('status', BookingStatus::COMPLETED);
+            }])
+            ->orderBy('completed_rentals', 'desc')
+            ->take(5)
+            ->get()
+            ->filter(function($motor) {
+                return $motor->completed_rentals > 0; // Filter in PHP instead of SQL HAVING
+            });
+
         return view('owner.dashboard', compact(
             'stats',
             'bookingStats',
@@ -101,7 +126,10 @@ class DashboardController extends Controller
             'recentBookings',
             'recentMotors',
             'earningsChartData',
-            'currentMonth'
+            'currentMonth',
+            'occupancyRate',
+            'motors',
+            'topMotors'
         ));
     }
 }

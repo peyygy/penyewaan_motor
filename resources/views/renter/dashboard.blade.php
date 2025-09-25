@@ -74,7 +74,7 @@
                 <div class="text-right">
                     <p class="text-2xl font-bold">{{ $activeBooking->tanggal_selesai->diffInDays(now()) }} hari</p>
                     <p class="text-green-100 text-sm">tersisa</p>
-                    <a href="{{ route('renter.bookings.show', $activeBooking) }}" 
+                    <a href="{{ route('penyewa.bookings.show', $activeBooking) }}" 
                         class="mt-2 inline-block bg-white text-green-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-green-50">
                         Lihat Detail
                     </a>
@@ -91,7 +91,7 @@
                 <div class="p-6 border-b border-gray-200">
                     <div class="flex justify-between items-center">
                         <h3 class="text-lg font-semibold text-gray-900">Motor Tersedia</h3>
-                        <a href="{{ route('renter.motors.index') }}" class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                        <a href="{{ route('penyewa.motors.index') }}" class="text-blue-600 hover:text-blue-900 text-sm font-medium">
                             Lihat Semua →
                         </a>
                     </div>
@@ -121,7 +121,7 @@
                                         <p class="text-sm text-gray-600">{{ $motor->owner->nama }}</p>
                                     </div>
                                     
-                                    <a href="{{ route('renter.motors.show', $motor) }}" 
+                                    <a href="{{ route('penyewa.motors.show', $motor) }}" 
                                         class="w-full bg-blue-600 text-white text-center py-2 px-4 rounded-md hover:bg-blue-700 block text-sm">
                                         Lihat Detail
                                     </a>
@@ -166,7 +166,7 @@
                             @endforeach
                         </div>
                         <div class="mt-4">
-                            <a href="{{ route('renter.bookings.index') }}" class="text-sm text-blue-600 hover:text-blue-900">
+                            <a href="{{ route('penyewa.bookings.index') }}" class="text-sm text-blue-600 hover:text-blue-900">
                                 Lihat semua booking →
                             </a>
                         </div>
@@ -185,25 +185,25 @@
                     <h3 class="text-lg font-semibold text-gray-900">Menu Cepat</h3>
                 </div>
                 <div class="p-6 space-y-3">
-                    <a href="{{ route('renter.motors.index') }}" 
+                    <a href="{{ route('penyewa.motors.index') }}" 
                         class="flex items-center p-3 rounded-md hover:bg-gray-50 border border-gray-200">
                         <span class="text-xl mr-3">🔍</span>
                         <span class="text-sm font-medium">Cari Motor</span>
                     </a>
                     
-                    <a href="{{ route('renter.bookings.index') }}" 
+                    <a href="{{ route('penyewa.bookings.index') }}" 
                         class="flex items-center p-3 rounded-md hover:bg-gray-50 border border-gray-200">
                         <span class="text-xl mr-3">📋</span>
                         <span class="text-sm font-medium">Booking Saya</span>
                     </a>
                     
-                    <a href="{{ route('renter.history.index') }}" 
+                    <a href="{{ route('penyewa.history.index') }}" 
                         class="flex items-center p-3 rounded-md hover:bg-gray-50 border border-gray-200">
                         <span class="text-xl mr-3">📈</span>
                         <span class="text-sm font-medium">Riwayat Sewa</span>
                     </a>
                     
-                    <a href="{{ route('renter.profile.index') }}" 
+                    <a href="{{ route('penyewa.profile.index') }}" 
                         class="flex items-center p-3 rounded-md hover:bg-gray-50 border border-gray-200">
                         <span class="text-xl mr-3">⚙️</span>
                         <span class="text-sm font-medium">Pengaturan</span>

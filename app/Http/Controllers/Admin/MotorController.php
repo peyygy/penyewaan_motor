@@ -22,7 +22,7 @@ class MotorController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Motor::with(['owner', 'tarif']);
+        $query = Motor::with(['pemilik', 'tarifRental']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -30,12 +30,16 @@ class MotorController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('merk', 'like', "%{$search}%")
                   ->orWhere('model', 'like', "%{$search}%")
-                  ->orWhere('plat_nomor', 'like', "%{$search}%")
                   ->orWhere('no_plat', 'like', "%{$search}%")
-                  ->orWhereHas('owner', function($ownerQuery) use ($search) {
+                  ->orWhereHas('pemilik', function($ownerQuery) use ($search) {
                       $ownerQuery->where('nama', 'like', "%{$search}%");
                   });
             });
+        }
+
+        // Filter by merk
+        if ($request->filled('merk')) {
+            $query->where('merk', 'like', "%{$request->merk}%");
         }
 
         // Filter by status
@@ -43,24 +47,28 @@ class MotorController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Filter by type
-        if ($request->filled('tipe')) {
-            $query->where('tipe', $request->tipe);
-        } elseif ($request->filled('tipe_cc')) {
+        // Filter by tipe_cc
+        if ($request->filled('tipe_cc')) {
             $query->where('tipe_cc', $request->tipe_cc);
         }
 
         // Filter by owner
-        if ($request->filled('owner_id')) {
-            $query->where('pemilik_id', $request->owner_id);
+        if ($request->filled('pemilik_id')) {
+            $query->where('pemilik_id', $request->pemilik_id);
         }
 
         $motors = $query->latest()->paginate(15);
+        $motors->appends($request->query());
 
-        // Get all owners for filter dropdown
-        $owners = User::where('role', UserRole::PEMILIK)->pluck('nama', 'id');
+        // Statistics
+        $stats = [
+            'total_motor' => Motor::count(),
+            'motor_available' => Motor::where('status', 'available')->count(),
+            'motor_rented' => Motor::where('status', 'rented')->count(),
+            'motor_pending' => Motor::where('status', 'pending')->count(),
+        ];
 
-        return view('admin.motors.index', compact('motors', 'owners'));
+        return view('admin.motors.index', compact('motors', 'stats'));
     }
 
     /**
@@ -76,17 +84,51 @@ class MotorController extends Controller
     /**
      * Store a newly created motor in storage.
      */
-    public function store(StoreMotorRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $motor = Motor::create($request->validated());
+        $request->validate([
+            'pemilik_id' => 'required|exists:users,id',
+            'merk' => 'required|string|max:255',
+            'tipe_cc' => 'required|integer|in:100,125,150',
+            'no_plat' => 'required|string|max:20|unique:motors',
+            'status' => 'required|string|in:pending,verified,available,maintenance',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'dokumen_kepemilikan' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'tarif_harian' => 'nullable|numeric|min:0',
+            'tarif_mingguan' => 'nullable|numeric|min:0',
+            'tarif_bulanan' => 'nullable|numeric|min:0',
+        ]);
 
-        // Create default tarif if provided
-        if ($request->filled('harga_per_hari')) {
+        // Upload foto if provided
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('motors', 'public');
+        }
+
+        // Upload dokumen kepemilikan if provided
+        $dokumenPath = null;
+        if ($request->hasFile('dokumen_kepemilikan')) {
+            $dokumenPath = $request->file('dokumen_kepemilikan')->store('documents', 'public');
+        }
+
+        // Create motor
+        $motor = Motor::create([
+            'pemilik_id' => $request->pemilik_id,
+            'merk' => $request->merk,
+            'tipe_cc' => $request->tipe_cc,
+            'no_plat' => $request->no_plat,
+            'status' => $request->status,
+            'foto' => $fotoPath,
+            'dokumen_kepemilikan' => $dokumenPath,
+        ]);
+
+        // Create tarif rental if provided
+        if ($request->filled('tarif_harian')) {
             TarifRental::create([
                 'motor_id' => $motor->id,
-                'harga_per_hari' => $request->harga_per_hari,
-                'harga_per_minggu' => $request->harga_per_hari * 6, // 6 days discount
-                'harga_per_bulan' => $request->harga_per_hari * 25, // 25 days discount
+                'tarif_harian' => $request->tarif_harian,
+                'tarif_mingguan' => $request->tarif_mingguan ?? ($request->tarif_harian * 6),
+                'tarif_bulanan' => $request->tarif_bulanan ?? ($request->tarif_harian * 25),
             ]);
         }
 
@@ -99,7 +141,7 @@ class MotorController extends Controller
      */
     public function show(Motor $motor): View
     {
-        $motor->load(['owner', 'penyewaans.penyewa', 'penyewaans.transaksi']);
+        $motor->load(['pemilik', 'tarifRental', 'penyewaans.penyewa']);
         
         return view('admin.motors.show', compact('motor'));
     }
@@ -109,7 +151,7 @@ class MotorController extends Controller
      */
     public function edit(Motor $motor): View
     {
-        $owners = User::where('role', UserRole::PEMILIK)->get();
+        $owners = User::where('role', UserRole::PEMILIK)->pluck('nama', 'id');
         
         return view('admin.motors.edit', compact('motor', 'owners'));
     }
@@ -117,66 +159,66 @@ class MotorController extends Controller
     /**
      * Update the specified motor in storage.
      */
-    public function update(StoreMotorRequest $request, Motor $motor): RedirectResponse
+    public function update(Request $request, Motor $motor): RedirectResponse
     {
-        // Get validated data but map to correct field names
-        $validatedData = $request->validated();
-        
-        // Map form fields to database fields if needed
-        $motorData = [];
-        if (isset($validatedData['brand'])) {
-            $motorData['merk'] = $validatedData['brand'];
-        }
-        if (isset($validatedData['model'])) {
-            $motorData['model'] = $validatedData['model'];
-        }
-        if (isset($validatedData['license_plate'])) {
-            $motorData['no_plat'] = $validatedData['license_plate'];
-        }
-        if (isset($validatedData['type'])) {
-            $motorData['tipe'] = $validatedData['type'];
-        }
-        if (isset($validatedData['year'])) {
-            $motorData['year'] = $validatedData['year'];
-        }
-        if (isset($validatedData['owner_id'])) {
-            $motorData['owner_id'] = $validatedData['owner_id'];
-        }
-        if (isset($validatedData['status'])) {
-            $motorData['status'] = $validatedData['status'];
-        }
-        if (isset($validatedData['description'])) {
-            $motorData['deskripsi'] = $validatedData['description'];
-        }
-        
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
-            // Delete old photo if exists
-            if ($motor->foto && Storage::disk('public')->exists($motor->foto)) {
-                Storage::disk('public')->delete($motor->foto);
-            }
-            
-            $photoPath = $request->file('photo')->store('motors', 'public');
-            $motorData['foto'] = $photoPath;
-        }
-        
-        $motor->update($motorData);
+        $request->validate([
+            'pemilik_id' => 'required|exists:users,id',
+            'merk' => 'required|string|max:255',
+            'tipe_cc' => 'required|integer|in:100,125,150',
+            'no_plat' => 'required|string|max:20|unique:motors,no_plat,' . $motor->id,
+            'status' => 'required|string|in:pending,verified,available,maintenance,rented',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'dokumen_kepemilikan' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'tarif_harian' => 'nullable|numeric|min:0',
+            'tarif_mingguan' => 'nullable|numeric|min:0',
+            'tarif_bulanan' => 'nullable|numeric|min:0',
+        ]);
 
-        // Update tarif if provided
-        if ($request->filled('harga_per_hari')) {
-            TarifRental::updateOrCreate(
+        // Handle foto upload
+        $fotoPath = $motor->foto;
+        if ($request->hasFile('foto')) {
+            // Delete old photo if exists
+            if ($fotoPath) {
+                Storage::disk('public')->delete($fotoPath);
+            }
+            $fotoPath = $request->file('foto')->store('motors', 'public');
+        }
+
+        // Handle document upload
+        $dokumenPath = $motor->dokumen_kepemilikan;
+        if ($request->hasFile('dokumen_kepemilikan')) {
+            // Delete old document if exists
+            if ($dokumenPath) {
+                Storage::disk('public')->delete($dokumenPath);
+            }
+            $dokumenPath = $request->file('dokumen_kepemilikan')->store('documents', 'public');
+        }
+
+        // Update motor data
+        $motor->update([
+            'pemilik_id' => $request->pemilik_id,
+            'merk' => $request->merk,
+            'tipe_cc' => $request->tipe_cc,
+            'no_plat' => $request->no_plat,
+            'status' => $request->status,
+            'foto' => $fotoPath,
+            'dokumen_kepemilikan' => $dokumenPath,
+        ]);
+
+        // Update or create tarif rental
+        if ($request->filled(['tarif_harian', 'tarif_mingguan', 'tarif_bulanan'])) {
+            $motor->tarifRental()->updateOrCreate(
                 ['motor_id' => $motor->id],
                 [
-                    'harga_per_hari' => $request->harga_per_hari,
-                    'harga_per_minggu' => $request->harga_per_minggu ?: $request->harga_per_hari * 6,
-                    'harga_per_bulan' => $request->harga_per_bulan ?: $request->harga_per_hari * 25,
-                    'deposit' => $request->deposit ?: 0,
+                    'tarif_harian' => $request->tarif_harian,
+                    'tarif_mingguan' => $request->tarif_mingguan,
+                    'tarif_bulanan' => $request->tarif_bulanan,
                 ]
             );
         }
 
-        return redirect()->route('admin.motors.show', $motor)
-                        ->with('success', 'Motor berhasil diperbarui.');
+        return redirect()->route('admin.motors.index')
+                        ->with('success', 'Motor berhasil diupdate.');
     }
 
     /**
@@ -184,12 +226,15 @@ class MotorController extends Controller
      */
     public function destroy(Motor $motor): RedirectResponse
     {
-        // Check if motor has active bookings
-        if ($motor->penyewaans()->whereIn('status', ['pending', 'confirmed', 'active'])->count() > 0) {
-            return redirect()->back()
-                           ->with('error', 'Motor tidak dapat dihapus karena masih ada booking aktif.');
+        // Delete associated files
+        if ($motor->foto) {
+            Storage::disk('public')->delete($motor->foto);
+        }
+        if ($motor->dokumen_kepemilikan) {
+            Storage::disk('public')->delete($motor->dokumen_kepemilikan);
         }
 
+        // Delete motor (tarif will be deleted by cascade)
         $motor->delete();
 
         return redirect()->route('admin.motors.index')
@@ -197,53 +242,73 @@ class MotorController extends Controller
     }
 
     /**
-     * Verify a motor.
+     * Display motors pending verification.
+     */
+    public function verification(Request $request): View
+    {
+        $query = Motor::with(['pemilik', 'tarifRental'])
+                     ->where('status', MotorStatus::PENDING);
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('merk', 'like', "%{$search}%")
+                  ->orWhere('no_plat', 'like', "%{$search}%")
+                  ->orWhereHas('pemilik', function($ownerQuery) use ($search) {
+                      $ownerQuery->where('nama', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $motors = $query->latest()->paginate(10);
+        
+        return view('admin.motors-verification.index', compact('motors'));
+    }
+
+    /**
+     * Show motor verification details.
+     */
+    public function showVerification(Motor $motor): View
+    {
+        return view('admin.motors-verification.show', compact('motor'));
+    }
+
+    /**
+     * Verify and approve a motor.
      */
     public function verify(Motor $motor): RedirectResponse
     {
-        if ($motor->status !== MotorStatus::PENDING) {
-            return redirect()->back()->with('error', 'Motor hanya dapat diverifikasi jika statusnya pending.');
-        }
-
-        $motor->update(['status' => MotorStatus::AVAILABLE]);
-
-        return redirect()->back()->with('success', 'Motor berhasil diverifikasi dan tersedia untuk disewa.');
+        $motor->update(['status' => MotorStatus::VERIFIED]);
+        
+        return redirect()->back()
+                        ->with('success', 'Motor berhasil diverifikasi.');
     }
 
     /**
-     * Reject a motor.
+     * Reject a motor verification.
      */
     public function reject(Motor $motor): RedirectResponse
     {
-        $motor->update(['status' => MotorStatus::PENDING]); // Keep as pending for re-review
+        $motor->update(['status' => MotorStatus::REJECTED]);
         
-        return redirect()->back()->with('success', 'Motor ditolak. Owner diminta untuk melengkapi dokumen.');
+        return redirect()->back()
+                        ->with('error', 'Motor ditolak verifikasinya.');
     }
 
     /**
-     * Suspend a motor.
+     * Activate a verified motor.
      */
-    public function suspend(Motor $motor): RedirectResponse
+    public function activate(Motor $motor): RedirectResponse
     {
-        if ($motor->status === MotorStatus::RENTED) {
-            return redirect()->back()->with('error', 'Motor yang sedang disewa tidak dapat di-maintenance.');
-        }
-
-        $motor->update(['status' => MotorStatus::MAINTENANCE]);
-        
-        return redirect()->back()->with('success', 'Motor berhasil diset ke status maintenance.');
-    }
-
-    /**
-     * Reactivate a motor.
-     */
-    public function reactivate(Motor $motor): RedirectResponse
-    {
-        if ($motor->status === MotorStatus::MAINTENANCE || $motor->status === MotorStatus::PENDING) {
+        if ($motor->status === MotorStatus::VERIFIED) {
             $motor->update(['status' => MotorStatus::AVAILABLE]);
-            return redirect()->back()->with('success', 'Motor berhasil diaktifkan kembali.');
+            
+            return redirect()->back()
+                            ->with('success', 'Motor berhasil diaktifkan dan tersedia untuk disewa.');
         }
-
-        return redirect()->back()->with('error', 'Motor tidak dapat diaktifkan dari status saat ini.');
+        
+        return redirect()->back()
+                        ->with('error', 'Motor harus diverifikasi terlebih dahulu sebelum diaktifkan.');
     }
 }

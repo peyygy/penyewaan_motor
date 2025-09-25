@@ -58,7 +58,21 @@
                 </div>
                 
                 <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
-                    @include('layouts.partials.user-menu')
+                    <!-- User info for mobile -->
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <span class="text-sm font-medium text-green-800">{{ substr(auth()->user()->nama, 0, 1) }}</span>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-700">{{ auth()->user()->nama }}</p>
+                            <form method="POST" action="{{ route('logout') }}" class="inline">
+                                @csrf
+                                <button type="submit" class="text-xs text-gray-500 hover:text-gray-700">Logout</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -76,7 +90,21 @@
                     </nav>
                 </div>
                 <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
-                    @include('layouts.partials.user-menu')
+                    <!-- User info for desktop -->
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <span class="text-sm font-medium text-green-800">{{ substr(auth()->user()->nama, 0, 1) }}</span>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-700">{{ auth()->user()->nama }}</p>
+                            <form method="POST" action="{{ route('logout') }}" class="inline">
+                                @csrf
+                                <button type="submit" class="text-xs text-gray-500 hover:text-gray-700">Logout</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

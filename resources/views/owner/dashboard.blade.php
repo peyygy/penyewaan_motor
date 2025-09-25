@@ -54,7 +54,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Pendapatan Bulan Ini</p>
-                    <p class="text-2xl font-semibold text-gray-900">Rp {{ number_format($revenueStats['monthly_revenue'], 0, ',', '.') }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">Rp {{ number_format($revenueStats['monthly_earnings'] ?? 0, 0, ',', '.') }}</p>
                 </div>
             </div>
         </div>
@@ -67,20 +67,20 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistik Pendapatan</h3>
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Total Pendapatan ({{ $currentMonth->format('M Y') }})</span>
-                    <span class="font-semibold text-green-600">Rp {{ number_format($revenueStats['monthly_revenue'], 0, ',', '.') }}</span>
+                    <span class="text-sm text-gray-600">Pendapatan Bulan Ini ({{ $currentMonth->format('M Y') }})</span>
+                    <span class="font-semibold text-green-600">Rp {{ number_format($revenueStats['monthly_earnings'] ?? 0, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Bagi Hasil Platform</span>
-                    <span class="font-semibold text-red-600">Rp {{ number_format($revenueStats['platform_fee'], 0, ',', '.') }}</span>
+                    <span class="text-sm text-gray-600">Total Pendapatan</span>
+                    <span class="font-semibold text-blue-600">Rp {{ number_format($revenueStats['total_earnings'] ?? 0, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Pendapatan Bersih</span>
-                    <span class="font-semibold text-blue-600">Rp {{ number_format($revenueStats['net_revenue'], 0, ',', '.') }}</span>
+                    <span class="text-sm text-gray-600">Menunggu Settlement</span>
+                    <span class="font-semibold text-orange-600">Rp {{ number_format($revenueStats['pending_settlements'] ?? 0, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600">Rata-rata per Motor</span>
-                    <span class="font-semibold">Rp {{ number_format($revenueStats['avg_per_motor'], 0, ',', '.') }}</span>
+                    <span class="font-semibold">Rp {{ number_format($stats['total_motors'] > 0 ? ($revenueStats['total_earnings'] ?? 0) / $stats['total_motors'] : 0, 0, ',', '.') }}</span>
                 </div>
             </div>
         </div>
@@ -103,7 +103,7 @@
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600">Tingkat Occupancy</span>
-                    <span class="font-semibold">{{ $bookingStats['occupancy_rate'] }}%</span>
+                    <span class="font-semibold">{{ $occupancyRate }}%</span>
                 </div>
             </div>
         </div>
@@ -117,12 +117,12 @@
                 <h3 class="text-lg font-semibold text-gray-900">Performa Motor Terbaik</h3>
             </div>
             <div class="p-6">
-                @if($topMotors->count() > 0)
+                @if(isset($topMotors) && $topMotors->count() > 0)
                     <div class="space-y-4">
                         @foreach($topMotors as $motor)
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                    @if($motor->photo)
+                                    @if(isset($motor->photo) && $motor->photo)
                                         <img class="h-10 w-10 rounded-lg object-cover mr-3" src="{{ Storage::url($motor->photo) }}" alt="Motor">
                                     @else
                                         <div class="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center mr-3">
@@ -130,19 +130,31 @@
                                         </div>
                                     @endif
                                     <div>
-                                        <p class="font-medium text-gray-900">{{ $motor->merk }}</p>
-                                        <p class="text-sm text-gray-600">{{ $motor->no_plat }}</p>
+                                        <p class="font-medium text-gray-900">{{ $motor->merk ?? 'N/A' }}</p>
+                                        <p class="text-sm text-gray-600">{{ $motor->no_plat ?? 'N/A' }}</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-semibold text-green-600">Rp {{ number_format($motor->monthly_revenue, 0, ',', '.') }}</p>
-                                    <p class="text-sm text-gray-500">{{ $motor->monthly_bookings }} booking</p>
+                                    <p class="font-semibold text-blue-600">
+                                        {{ $motor->completed_rentals ?? 0 }} rental{{ ($motor->completed_rentals ?? 0) > 1 ? 's' : '' }}
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        @if(isset($motor->tarifRental) && $motor->tarifRental)
+                                            Rp {{ number_format($motor->tarifRental->harga_per_hari ?? 0, 0, ',', '.') }}/hari
+                                        @else
+                                            <span class="text-gray-400">Belum ada tarif</span>
+                                        @endif
+                                    </p>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <p class="text-gray-500 text-center">Belum ada data performa motor</p>
+                    <div class="text-center py-8">
+                        <div class="text-gray-400 text-4xl mb-4">🏍️</div>
+                        <p class="text-gray-500 font-medium">Belum ada data performa motor</p>
+                        <p class="text-gray-400 text-sm">Motor yang pernah disewa akan ditampilkan di sini</p>
+                    </div>
                 @endif
             </div>
         </div>

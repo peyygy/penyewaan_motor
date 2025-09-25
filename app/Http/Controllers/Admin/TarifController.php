@@ -28,7 +28,7 @@ class TarifController extends Controller
 
         $tarifs = $query->paginate(15);
 
-        return view('admin.tarifs.index', compact('tarifs'));
+        return view('admin.tarif.index', compact('tarifs'));
     }
 
     /**
@@ -37,7 +37,7 @@ class TarifController extends Controller
     public function create(): View
     {
         $motors = Motor::whereDoesntHave('tarif')->get();
-        return view('admin.tarifs.create', compact('motors'));
+        return view('admin.tarif.create', compact('motors'));
     }
 
     /**
@@ -63,7 +63,7 @@ class TarifController extends Controller
     public function show(TarifRental $tarif): View
     {
         $tarif->load('motor.owner');
-        return view('admin.tarifs.show', compact('tarif'));
+        return view('admin.tarif.show', compact('tarif'));
     }
 
     /**
@@ -72,7 +72,7 @@ class TarifController extends Controller
     public function edit(TarifRental $tarif): View
     {
         $tarif->load('motor');
-        return view('admin.tarifs.edit', compact('tarif'));
+        return view('admin.tarif.edit', compact('tarif'));
     }
 
     /**

@@ -11,14 +11,11 @@
     Motor Saya
 </a>
 
-{{-- Booking menu (akan diimplementasi nanti) --}}
-{{--
 <a href="{{ route('owner.bookings.index') }}" 
    class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('owner.bookings.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
     <span class="mr-3 text-lg">📅</span>
     Booking Motor
 </a>
---}}
 
 <a href="{{ route('owner.revenue.index') }}" 
    class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('owner.revenue.*') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">

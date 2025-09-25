@@ -3,33 +3,31 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
-use App\Http\Controllers\Admin\MotorVerificationController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\TarifController;
-use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\MotorController as AdminMotorController;
 use App\Http\Controllers\Admin\PenyewaanController as AdminPenyewaanController;
+use App\Http\Controllers\Admin\TransaksiController as AdminTransaksiController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboard;
 use App\Http\Controllers\Owner\MotorController;
-use App\Http\Controllers\Admin\MotorController as AdminMotorController;
-use App\Http\Controllers\Owner\RevenueController;
-use App\Http\Controllers\Renter\DashboardController as RenterDashboard;
-use App\Http\Controllers\Renter\MotorSearchController;
-use App\Http\Controllers\Renter\BookingController;
-use App\Http\Controllers\Renter\PaymentController;
+use App\Http\Controllers\Owner\PenyewaanController as OwnerPenyewaanController;
+use App\Http\Controllers\Owner\TransaksiController as OwnerTransaksiController;
+use App\Http\Controllers\Penyewa\DashboardController as PenyewaDashboard;
+use App\Http\Controllers\Penyewa\PenyewaanController as PenyewaPenyewaanController;
+use App\Http\Controllers\Penyewa\TransaksiController as PenyewaTransaksiController;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-// Redirect root to appropriate dashboard based on role
+// Landing page - Show welcome page for guests, redirect authenticated users
 Route::get('/', function () {
     if (Auth::check()) {
         return match(Auth::user()->role) {
             UserRole::ADMIN => redirect()->route('admin.dashboard'),
             UserRole::PEMILIK => redirect()->route('owner.dashboard'),
-            UserRole::PENYEWA => redirect()->route('renter.dashboard'),
+            UserRole::PENYEWA => redirect()->route('penyewa.dashboard'),
         };
     }
-    return redirect()->route('login');
+    return view('welcome');
 });
 
 // Guest routes (login & register)
@@ -42,68 +40,62 @@ Route::middleware('guest')->group(function () {
 
 // Logout (authenticated users)
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
+Route::get('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout.get');
 
-// Admin Routes
+// Admin Routes - Full CRUD Access
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     
-    // Motor verification and management
-    Route::get('/motors-verification', [MotorVerificationController::class, 'index'])->name('motors-verification.index');
-    Route::get('/motors-verification/{motor}', [MotorVerificationController::class, 'show'])->name('motors-verification.show');
-    Route::patch('/motors-verification/{motor}/verify', [MotorVerificationController::class, 'verify'])->name('motors-verification.verify');
-    Route::patch('/motors-verification/{motor}/activate', [MotorVerificationController::class, 'activate'])->name('motors-verification.activate');
-    Route::patch('/motors-verification/{motor}/reject', [MotorVerificationController::class, 'reject'])->name('motors-verification.reject');
-    
-    // Full motor CRUD
+    // CRUD Resources untuk Admin
     Route::resource('motors', AdminMotorController::class);
-    Route::patch('/motors/{motor}/suspend', [AdminMotorController::class, 'suspend'])->name('motors.suspend');
-    Route::patch('/motors/{motor}/reactivate', [AdminMotorController::class, 'reactivate'])->name('motors.reactivate');
-    
-    // User management
-    Route::resource('users', UserController::class)->only(['index', 'show', 'destroy']);
-    
-    // Rental rates management
-    Route::resource('tarif', TarifController::class);
-    
-    // Penyewaan management
     Route::resource('penyewaans', AdminPenyewaanController::class);
-    Route::patch('/penyewaans/{penyewaan}/confirm', [AdminPenyewaanController::class, 'confirm'])->name('penyewaans.confirm');
-    Route::patch('/penyewaans/{penyewaan}/activate', [AdminPenyewaanController::class, 'activate'])->name('penyewaans.activate');
-    Route::patch('/penyewaans/{penyewaan}/complete', [AdminPenyewaanController::class, 'complete'])->name('penyewaans.complete');
+    Route::resource('transaksis', AdminTransaksiController::class);
     
-    // Reports and analytics
+    // Motor Verification Routes
+    Route::prefix('motors-verification')->name('motors-verification.')->group(function () {
+        Route::get('/', [AdminMotorController::class, 'verification'])->name('index');
+        Route::get('/{motor}', [AdminMotorController::class, 'showVerification'])->name('show');
+        Route::post('/{motor}/verify', [AdminMotorController::class, 'verify'])->name('verify');
+        Route::post('/{motor}/reject', [AdminMotorController::class, 'reject'])->name('reject');
+        Route::post('/{motor}/activate', [AdminMotorController::class, 'activate'])->name('activate');
+    });
+    
+    // User Management
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    
+    // Laporan Admin
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
     Route::get('/reports/analytics', [ReportController::class, 'analytics'])->name('reports.analytics');
+    Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
+    Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export-excel');
 });
 
-// Owner Routes
+// Owner/Pemilik Routes - Manage Own Motors
 Route::middleware(['auth', 'role:pemilik'])->prefix('owner')->name('owner.')->group(function () {
     Route::get('/dashboard', [OwnerDashboard::class, 'index'])->name('dashboard');
     
-    // Motor management
+    // CRUD Resources untuk Owner (hanya motor milik sendiri)
     Route::resource('motors', MotorController::class);
+    Route::resource('penyewaans', OwnerPenyewaanController::class)->only(['index', 'show', 'edit', 'update']);
+    Route::resource('transaksis', OwnerTransaksiController::class)->only(['index', 'show']);
     
-    // Revenue reports
-    Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue.index');
-    Route::get('/revenue/detail/{motor}', [RevenueController::class, 'detail'])->name('revenue.detail');
+    // Laporan Owner
+    Route::get('/reports', [MotorController::class, 'reports'])->name('reports.index');
 });
 
-// Renter Routes
-Route::middleware(['auth', 'role:penyewa'])->prefix('renter')->name('renter.')->group(function () {
-    Route::get('/dashboard', [RenterDashboard::class, 'index'])->name('dashboard');
+// Penyewa Routes - Book Motors & Manage Bookings
+Route::middleware(['auth', 'role:penyewa'])->prefix('penyewa')->name('penyewa.')->group(function () {
+    Route::get('/dashboard', [PenyewaDashboard::class, 'index'])->name('dashboard');
     
-    // Motor search and browse
-    Route::get('/motors', [MotorSearchController::class, 'index'])->name('motors.index');
-    Route::get('/motors/{motor}', [MotorSearchController::class, 'show'])->name('motors.show');
+    // Browse available motors
+    Route::get('/motors', [PenyewaPenyewaanController::class, 'browseMotors'])->name('motors.index');
+    Route::get('/motors/{motor}', [PenyewaPenyewaanController::class, 'showMotor'])->name('motors.show');
     
-    // Booking management
-    Route::resource('bookings', BookingController::class);
-    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+    // CRUD Penyewaan untuk Penyewa
+    Route::resource('penyewaans', PenyewaPenyewaanController::class);
+    Route::resource('transaksis', PenyewaTransaksiController::class)->only(['index', 'show', 'store']);
     
-    // Payment management
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-    Route::post('/payments/create', [PaymentController::class, 'create'])->name('payments.create');
-    Route::get('/payments/{transaksi}', [PaymentController::class, 'show'])->name('payments.show');
-    Route::post('/payments/callback', [PaymentController::class, 'callback'])->name('payments.callback');
+    // Laporan Penyewa
+    Route::get('/history', [PenyewaPenyewaanController::class, 'history'])->name('history');
 });
