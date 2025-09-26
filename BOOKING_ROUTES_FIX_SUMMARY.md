@@ -1,4 +1,4 @@
-# Laravel Booking Routes Fix Summary
+                          # Laravel Booking Routes Fix Summary
 
 ## Problem Fixed
 **"Route [owner.bookings.index] not defined"** - The application was trying to access booking routes that didn't exist.
